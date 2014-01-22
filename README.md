@@ -6,9 +6,13 @@ ArchlinuxARM XBMC PKBUILDS for A10 devices (Cubieboard 1 etc..) with Video Accel
 ##Installation (testing with mesa 9.2.3)
 
 cd binaries
+
 pacman -U libump-git-26.9971394-1-armv7h.pkg.tar.xz
+
 pacman -U sunxi-mali-fb-git-26.9971394-1-armv7h.pkg.tar.xz
+
 pacman -U cedarx-libs-git-20130909.b8f52d9-1-armv7h.pkg.tar.xz
+
 pacman -U xbmc-a10-20130925.e7d9567-1-armv7h.pkg.tar.xz
 
 
