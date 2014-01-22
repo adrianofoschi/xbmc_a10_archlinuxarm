@@ -21,6 +21,7 @@ pacman -U xbmc-a10-20130925.e7d9567-1-armv7h.pkg.tar.xz
 1) make and install sunxi-mali-fb-git,sunxi-mali-libump-git
 
 cd sunxi-mali-fb-git
+
 makepkg -si
 
 NOTE: update mesa version in PKGBUILD
@@ -29,11 +30,13 @@ Go to line line #40 of PKGBUILD (package_sunxi-mali-fb-git provides section) and
 2) make and install cedarx-libs-git
 
 cd cedarx-libs-git
+
 makepkg -si
 
 3) make and install xbmc a10 patched version
 
 cd xbmc-a10
+
 makepkg -si
 
 NOTE: I suggest to enable ccache in /etc/makepkg.conf becouse the native compilation on Cubieboard takes about 2 hours.
