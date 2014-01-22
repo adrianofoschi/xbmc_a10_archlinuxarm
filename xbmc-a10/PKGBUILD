@@ -1,0 +1,108 @@
+pkgname=xbmc-a10
+_gitname='xbmc'
+pkgver=20130925.e7d9567
+pkgrel=1
+pkgdesc="XBMC Media Center git master branch"
+provides=('xbmc')
+conflicts=('xbmc' 'xbmc-pulse' 'xbmc-svn')
+replaces=('xbmc-svn')
+arch=('armv7h')
+url="http://xbmc.org"
+license=('GPL' 'LGPL')
+depends=('cedarx-libs-git' 'sunxi-mali-fb-git' 'hicolor-icon-theme' 'fribidi' 'lzo2' 'smbclient' 'libtiff' 'libva'
+	 'libpng' 'libcdio' 'yajl' 'libjpeg-turbo' 'libsamplerate' 'glew' 'libssh' 'libmicrohttpd' 'sdl_mixer' 'sdl_image' 'python2'
+	 'libass' 'libmpeg2' 'libmad' 'libmodplug' 'jasper' 'rtmpdump' 'unzip' 'libbluray' 
+	 'libnfs' 'bluez-libs' 'glu' 'tinyxml' 'taglib' 'libpulse')
+makedepends=('boost' 'cmake' 'git' 'gperf' 'nasm' 'zip' 'udisks' 'upower' 'doxygen' 'swig' 'java-environment' 'imagemagick')
+
+optdepends=(
+	'gdb: for meaningful backtraces in case of trouble - STRONGLY RECOMMENDED'
+	'lirc: remote controller support'
+	'udisks: automount external drives'
+	'upower: used to trigger suspend functionality'
+	'unrar: access compressed files without unpacking them'
+	'pulseaudio: pulseaudio support'
+	'avahi: Avahi support'
+	'afpfs-ng: Apple Filing Protocol'
+	'libpulse: PulseAudio support'
+	'libshairport: AirTunes support'
+)
+install="$pkgname.install"
+source=(
+	"$_gitname::git://github.com/rellla/xbmca10.git"
+	'xbmc.service'
+)
+sha256sums=(
+	'SKIP'
+	'547e06f3141866cd34b1df34025517e9826992b67543af7621d954bcdfa0ba94'
+)
+
+_prefix='/usr'
+_CFLAGS='-pipe -O3 -mfloat-abi=hard -mtune=cortex-a8 -mcpu=cortex-a8 -D__ARM_NEON__ -DALLWINNERA10 -I/usr/include/adapter -I/usr/include/adapter/cdxalloc -I/usr/include/adapter/avheap -I/usr/include/fbm -I/usr/include/libcedarv -I/usr/include/libvecore -I/usr/include/vbv'
+
+prepare() {
+	#fix *.png image format
+	msg "Fix *.PNG images"
+	find "$srcdir/$_gitname" -name \*.png -exec convert {} -strip {} \;
+}
+
+pkgver() {
+	cd "$srcdir/$_gitname"
+	# suggested by marzoul
+	git log -1 --date=short --format="%cd.%h" | tr -d '-'
+}
+
+build() {
+	cd "$srcdir/$_gitname"
+
+	msg "Starting make..."
+
+	# fix configure: error: Submodule lib/libdvd/libdvdcss failed to configure
+	(cd lib/libdvd/libdvdcss; sed -e 's/AM_CONFIG_HEADER/AC_CONFIG_HEADERS/g' -i configure.ac)
+
+	# fix samba4 libsmbclient.h location
+	sed -e 's/\(#include \)<libsmbclient\.h>/\1<samba-4.0\/libsmbclient\.h>/g' \
+		-i xbmc/filesystem/SmbFile.cpp \
+		-i xbmc/filesystem/SMBDirectory.cpp
+
+
+	msg2 "Bootstrapping XBMC"
+	./bootstrap
+	
+	export PYTHON_VERSION=2  # external python v2
+	export CEDARLIBS="-lcedarv -lvecore" #cedarx libs path
+	
+	msg2 "Configuring XBMC"
+	./configure --prefix=$_prefix \
+	--disable-x11 \
+	--disable-sdl \
+	--disable-xrandr \
+	--disable-joystick \
+	--disable-gl \
+	--disable-vdpau \
+	--disable-vaapi \
+	--disable-openmax \
+	--enable-neon \
+	--enable-gles \
+	--disable-mysql \
+	--disable-optical-drive \
+	--disable-crystalhd \
+	--disable-vtbdecoder \
+	--disable-projectm \
+	--disable-libcec \
+	--disable-optimizations \
+	CFLAGS="${_CFLAGS}" CXXFLAGS="${_CFLAGS}" CPPFLAGS="${_CFLAGS}"
+	
+	# Now (finally) build
+	msg2 "Running make"
+	make HOME=/home/adriano #ccache
+}
+
+package() {
+ 	cd "$srcdir/$_gitname"
+ 	msg2 "Running make install" 
+ 	make DESTDIR="$pkgdir" install
+ 
+ 	# install systemd service
+ 	install -Dm0644 $srcdir/xbmc.service $pkgdir/usr/lib/systemd/system/xbmc.service
+}

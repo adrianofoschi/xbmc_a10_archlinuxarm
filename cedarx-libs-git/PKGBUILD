@@ -1,0 +1,49 @@
+pkgname=cedarx-libs-git
+_gitname='cedarx-libs'
+pkgver=20130909.b8f52d9
+pkgrel=1
+pkgdesc="Cedarx Libs"
+arch=('armv7h' 'i686' 'x86_64')
+url="http://xbmc.org"
+license=('GPL' 'LGPL')
+depends=()
+makedepends=('git')
+source=("$_gitname::git://github.com/linux-sunxi/cedarx-libs.git")
+sha256sums=('SKIP')
+options=('staticlibs')
+
+pkgver() {
+	cd "$srcdir/$_gitname"
+	# suggested by marzoul
+	git log -1 --date=short --format="%cd.%h" | tr -d '-'
+}
+
+build() {
+	cd "$srcdir/$_gitname/libcedarv/linux-armhf"
+	msg2 "Running make" 
+	make all
+}
+
+package() {
+	cd "$srcdir/$_gitname/libcedarv/linux-armhf"
+	
+	install -Dm0644 libcedarv.a ${pkgdir}/usr/lib/libcedarv.a
+        install -Dm0644 drv_display_sun4i.h ${pkgdir}/usr/include/drv_display_sun4i.h
+        install -Dm0644 cedardev_api.h ${pkgdir}/usr/include/cedardev_api.h
+
+	install -Dm0644 libvecore/libvecore.so ${pkgdir}/usr/lib/libvecore.so
+        install -Dm0644 libvecore/libve_typedef.h ${pkgdir}/usr/include/libvecore/libve_typedef.h
+        install -Dm0644 libvecore/libve_adapter.h ${pkgdir}/usr/include/libvecore/libve_adapter.h
+        install -Dm0644 libvecore/libve.h ${pkgdir}/usr/include/libvecore/libve.h
+
+        install -Dm0644 libcedarv/libcedarv.h ${pkgdir}/usr/include/libcedarv/libcedarv.h
+        install -Dm0644 libcedarv/awprintf.h ${pkgdir}/usr/include/libcedarv/awprintf.h
+        install -Dm0644 libcedarv/vdecoder_config.h ${pkgdir}/usr/include/libcedarv/vdecoder_config.h
+        install -Dm0644 libcedarv/vdecoder.h ${pkgdir}/usr/include/libcedarv/vdecoder.h
+
+        install -Dm0644 adapter/os_adapter.h ${pkgdir}/usr/include/adapter/os_adapter.h
+        install -Dm0644 adapter/avheap/avheap.h ${pkgdir}/usr/include/adapter/avheap/avheap.h
+
+        install -Dm0644 fbm/fbm.h ${pkgdir}/usr/include/fbm/fbm.h
+        install -Dm0644 vbv/vbv.h ${pkgdir}/usr/include/vbv/vbv.h
+}
